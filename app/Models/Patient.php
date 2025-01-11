@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\PaginationScope;
+use App\Models\Traits\ModelValidation;
 
 class Patient extends Model
 {
-    use HasFactory, SoftDeletes, PaginationScope;
+    use HasFactory, SoftDeletes, PaginationScope, ModelValidation;
 
     protected $fillable = [
         'patient_code',
@@ -22,16 +23,58 @@ class Patient extends Model
         'blood_type',
     ];
 
-    const RULES = [
-        'patient_code'  => 'required|string|unique:patients|max:255',
-        'name'          => 'required|string|max:255',
-        'gender'        => 'required|in:L,P',
-        'date_of_birth' => 'required|date',
-        'phone'         => 'required|string|max:20',
-        'email'         => 'nullable|email|max:255',
-        'address'       => 'nullable|string|max:500',
-        'blood_type'    => 'nullable|in:A,B,AB,O',
+    const GENDERS = [
+        "L" => "Laki-Laki",
+        "P" => "Perempuan",
     ];
+
+    const BLODS = [null => 'Belum Tahu', 'A' => 'A', 'B' => 'B', 'AB' => 'AB', 'O' => 'O'];
+
+    const RULES = [
+        'patient_code' => [
+            'required' => true,
+            'string' => true,
+            'unique' => 'patients',
+            'maxlength' => 255,
+        ],
+        'name' => [
+            'required' => true,
+            'string' => true,
+            'maxlength' => 255,
+        ],
+        'gender' => [
+            'required' => true,
+            'control' => 'radio',
+            'in' => self::GENDERS,
+        ],
+        'date_of_birth' => [
+            'required' => true,
+            'control' => 'date',
+        ],
+        'phone' => [
+            'required' => true,
+            'string' => true,
+            'maxlength' => 20,
+        ],
+        'email' => [
+            'nullable' => true,
+            'email' => true,
+            'maxlength' => 255,
+        ],
+        'address' => [
+            'control' => 'textarea',
+            'nullable' => true,
+            'string' => true,
+            'maxlength' => 500,
+        ],
+        'blood_type' => [
+            'nullable' => true,
+            'control' => 'radio',
+            'in' => self::BLODS,
+        ],
+    ];
+    
+    const FILTERABLE = ['patient_code', 'name', 'phone', 'email'];
 
     const SORT_DEFAULT = 'name';
 }

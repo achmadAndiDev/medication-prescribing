@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
@@ -45,6 +46,7 @@ class WebManagementController extends Controller
     {
         // header
         $header = array_values(static::defineIndexHeader());
+        $filterableHeaders = static::defineFilterableHeaders();
 
         // data, default sort kolom pertama
         $sortIndex = 0;
@@ -57,8 +59,16 @@ class WebManagementController extends Controller
         $search = $request->get('search');
 
         $filter = [];
-        foreach ($header as $v) {
-            $filter[] = ['key' => $v['field'], 'value' => $search];
+        if ($request->field == 'all') {
+            $keys = [];
+            foreach ($filterableHeaders as $v) {
+                $keys[] = $v['field'];
+            }
+            $filter[] = ['key' => $keys, 'value' => $search];
+        } 
+        
+        if(in_array($request->field, array_keys($filterableHeaders))) {
+            $filter[] = ['key' => $request->field, 'value' => $search];
         }
 
         $data = $this->service->index(
@@ -71,6 +81,7 @@ class WebManagementController extends Controller
         return view('pages.' . $this->viewFolder . '.index', [
             'data' => $data,
             'header' => $header,
+            'filterableHeaders' => $filterableHeaders,
             'search' => $search,
             'sortDirection' => $sortDirection,
             'sortIndex' => $sortIndex,
@@ -83,13 +94,10 @@ class WebManagementController extends Controller
      */
     public function create()
     {
-        $isReadOnly = Auth::user()->role == User::ROLE_USER;
-        if ($isReadOnly) {
-            return redirect()->to('/');
-        }
-
-        return view('pages.' . $this->viewFolder . '.create', [
-            'content' => [static::defineFormInputs()],
+        // echo json_encode([static::defineFormInputs()]);
+        // die;
+        return view('pages.' . $this->viewFolder . '.form', [
+            'content' => static::defineFormInputs(),
             'resource' => $this->resource
         ]);
     }
@@ -123,7 +131,7 @@ class WebManagementController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->to(route($this->resource . '.show', [Str::singular(str_replace('-', '_', $this->resource)) => $data->id]))->with('success', 'Berhasil menambah data');
+        return redirect()->to(route($this->resource . '.index', [Str::singular(str_replace('-', '_', $this->resource)) => $data->id]))->with('success', 'Berhasil menambah data');
     }
 
     /**
@@ -138,6 +146,9 @@ class WebManagementController extends Controller
             $field = $v['value_field'] ?? $k;
             $data[$k] = $model->$field;
         }
+
+        // echo json_encode($data);
+        // die;
 
         return view('pages.' . $this->viewFolder . '.show', [
             'id' => $model->id,
@@ -158,9 +169,9 @@ class WebManagementController extends Controller
             $content[$k]['value'] = $model->$k;
         }
 
-        return view('pages.' . $this->viewFolder . '.edit', [
+        return view('pages.' . $this->viewFolder . '.form', [
             'id' => $model->id,
-            'content' => [$content],
+            'content' => $content,
             'resource' => $this->resource
         ]);
     }
@@ -188,7 +199,7 @@ class WebManagementController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->to(route($this->resource . '.show', [Str::singular(str_replace('-', '_', $this->resource)) => $data->id]))->with('success', 'Berhasil merubah data');
+        return redirect()->to(route($this->resource . '.index', [Str::singular(str_replace('-', '_', $this->resource)) => $data->id]))->with('success', 'Berhasil merubah data');
     }
 
     /**
@@ -198,7 +209,7 @@ class WebManagementController extends Controller
     {
         $this->service->destroy($id);
 
-        return back()->with('success', $this->resource . ' berhasil di hapus');
+        return back()->with('success', Lang::get($this->resource.".title") . ' berhasil di hapus');
     }
 
     public function importDownloadTemplate()
@@ -218,6 +229,19 @@ class WebManagementController extends Controller
         $header = [];
         foreach ($this->service->model::RULES as $k => $v) {
             $header[$k] = ['field' => $k, 'label' => __($this->resource . '.' . $k), 'sortable' => true];
+        }
+
+        return $header;
+    }
+
+    /**
+     * Get resource list header.
+     */
+    protected function defineFilterableHeaders()
+    {
+        $header = [];
+        foreach ($this->service->model::FILTERABLE as $k) {
+            $header[$k] = ['field' => $k, 'label' => __($this->resource . '.' . $k)];
         }
 
         return $header;

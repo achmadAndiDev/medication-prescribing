@@ -66,6 +66,30 @@ if (!empty($resource)) {
             </div>
         </div>
         <div class="card-body">
+            <div class="mb-3">
+                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center">
+                    <div class="me-4">
+                        <select name="field" id="field" class="form-control form-control-sm d-inline-block w-auto">
+                            <option value="all">Semua</option>
+                            @foreach($filterableHeaders as $headItem)
+                                <option value="{{ $headItem['field'] }}" {{ request('field') == $headItem['field'] ? 'selected' : '' }}>
+                                    {{ $headItem['label'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="me-4">
+                        <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="masukan pencarian..." value="{{ request('search') }}">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary me-4">
+                        <i class="fa fa-search"></i>
+                    </button>
+                    <a href="{{ url()->current() }}" class="btn btn-sm btn-secondary ms-2">
+                        <i class="fa fa-sync-alt"></i> 
+                    </a>
+                </form>
+            </div>
+    
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
