@@ -2,16 +2,24 @@
 
     <a class="sidebar-brand d-flex align-items-center" href="/" style="background: white">
         <div class="sidebar-brand-icon">
-            <img src="{{ asset('public/images/logo.png') }}" alt="Logo App" width="50">
+            <img src="{{ asset('images/logo.jpg') }}" alt="Logo App" width="50">
         </div>
-        <div class="sidebar-brand-text" style="text-transform: none; color:black; margin-left:10px">Aplikasi Keuangan<sup></sup></div>
+        <div class="sidebar-brand-text" style="text-transform: none; color:black; margin-left:10px">{{ config('app.name') }}<sup></sup></div>
     </a>
+
+    <hr class="sidebar-divider my-0">
 
     <hr class="sidebar-divider my-0">
     <li class="nav-item {{ Request::is('dashboard') || Request::is('dashboard/*') ? 'active' : '' }}" >
         <a class="nav-link" href="{{ url('/dashboard') }}">
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span></a>
+    </li>
+    
+    <li class="nav-item {{ Request::is('patients') || Request::is('patients/*') ? 'active' : '' }}" >
+        <a class="nav-link" href="{{ url('/patients') }}">
+            <i class="fas fa-users"></i>
+            <span>Pasien</span></a>
     </li>
 
     <hr class="sidebar-divider d-none d-md-block">
