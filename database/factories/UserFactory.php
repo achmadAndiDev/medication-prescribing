@@ -28,6 +28,8 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => $this->role ?? null,
+            'is_active' => true,
             'remember_token' => Str::random(10),
         ];
     }
@@ -40,5 +42,20 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Set the role for the user.
+     *
+     * @param  string  $role
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function withRole($role)
+    {
+        $this->state([
+            'role' => $role,
+        ]);
+
+        return $this;
     }
 }
