@@ -15,7 +15,6 @@ if (!empty($resource)) {
 @section('title', $title)
 
 @push('stylesheets')
-    <link href="{{ asset('public/vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
     <style>
         .pagination-sm {
             font-size: 12px; /* Adjust size as needed */
@@ -98,7 +97,7 @@ if (!empty($resource)) {
                             @foreach($header as $headItem)
                                 <th>{{ $headItem['label'] }}</th>
                             @endforeach
-                            <th>Aksi</th>
+                            <th style="width:100px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -118,7 +117,7 @@ if (!empty($resource)) {
                                     <a href="{{ route($resource.'.edit', $item->id) }}" class="btn btn-xs btn-info me-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-xs btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete('{{ $item->id }}', '{{ $item->name }}')">
+                                    <button type="button" class="btn btn-xs btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete('{{ $item->id }}', '{{ $item->name ?? $item->patient_name }}')">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>                          
@@ -158,7 +157,7 @@ if (!empty($resource)) {
                 </button>
             </div>
             <div class="modal-body">
-                Apakah anda yakin menghapus data <b>"<span id="patientName"></span>"</b>? Data yang terhapus tidak bisa dikembalikan.
+                Apakah anda yakin menghapus data <b>"<span id="valueName"></span>"</b>? Data yang terhapus tidak bisa dikembalikan.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Batal</button>
@@ -175,23 +174,16 @@ if (!empty($resource)) {
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('public/vendor/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('public/vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
-
     <script>
-        function confirmDelete(id, patientName) {
-            document.getElementById('patientName').innerText = patientName;
+        function confirmDelete(id, valueName) {
+            document.getElementById('valueName').innerText = valueName;
 
-            let formAction = '/patients/' + id; 
+            let formAction = '/'+'{{ $resource }}'+'/' + id; 
             document.getElementById('deleteForm').action = formAction;
 
             let modalDelete = new bootstrap.Modal(document.getElementById('deleteModal'));
             modalDelete.show();
         }
-
-        $(document).ready(function() {
-            $('#dataTable').DataTable();
-        });
 
         @if(session('success'))
             Swal.fire({

@@ -78,6 +78,8 @@ class WebManagementController extends Controller
             filter: $filter
         );
 
+        $data = static::customView($data);
+
         return view('pages.' . $this->viewFolder . '.index', [
             'data' => $data,
             'header' => $header,
@@ -147,8 +149,7 @@ class WebManagementController extends Controller
             $data[$k] = $model->$field;
         }
 
-        // echo json_encode($data);
-        // die;
+        $data = static::customView($data, true);
 
         return view('pages.' . $this->viewFolder . '.show', [
             'id' => $model->id,
@@ -330,5 +331,12 @@ class WebManagementController extends Controller
             'message' => $message,
             'data' => $imageNames
         ];
+    }
+
+    /**
+     * modify view data table if needed
+     */
+    protected function customView($data, $isShow = false) {
+        return $data;
     }
 }

@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Web\ExaminationController;
 use App\Http\Controllers\Web\PatientController;
+use App\Http\Controllers\Web\DoctorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +19,10 @@ use App\Http\Controllers\Web\PatientController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('patients', PatientController::class);
+    Route::resource('examinations', ExaminationController::class);
+
+    Route::get('/search-options/patients', [PatientController::class, 'searchOptions']);
+    Route::get('/search-options/doctors', [DoctorController::class, 'searchOptions']);
 });
 
 

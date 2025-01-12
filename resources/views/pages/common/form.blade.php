@@ -11,8 +11,8 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
 
 @section('title', $formTitle.' '.$title) 
 @push('stylesheets')
-    <link href="{{ asset('public/vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 @endpush
 
 @section('content')
@@ -74,7 +74,7 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
                                             <span class="text-danger">*</span>
                                         @endif
                                     </label>
-                                    <div class="col-sm-10">
+                                    <div class="{{ empty($attributes['col']) ? 'col-sm-10' : 'col-sm-' . $attributes['col'] }}">
                                         @if(isset($attributes['control']) && $attributes['control'] == 'radio')
                                             <!-- Radio Buttons -->
                                             @foreach($attributes['in'] as $key => $value)
@@ -90,9 +90,9 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
                                                     </label>
                                                 </div>
                                             @endforeach
-                                        @elseif(isset($attributes['control']) && $attributes['control'] == 'date')
+                                        @elseif(isset($attributes['control']) && ($attributes['control'] == 'date' || $attributes['control'] == 'datetime'))
                                             <!-- Date Input -->
-                                            <input type="date" 
+                                            <input type="{{ $attributes['control'] == 'date' ? 'date' : 'datetime-local' }}" 
                                                 class="form-control @error($field) is-invalid @enderror" 
                                                 name="{{ $attributes['name'] }}" 
                                                 id="{{ $attributes['id'] }}" 
@@ -109,6 +109,49 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
                                                 rows="4" 
                                                 {{ $attributes['nullable'] ? '' : 'required' }}
                                                 {{ isset($attributes['maxlength']) ? 'maxlength=' . $attributes['maxlength'] : '' }}>{{ old($field, $attributes['value'] ?? '') }}</textarea>
+                                        @elseif(isset($attributes['control']) && $attributes['control'] == 'number')
+                                            <!-- Number Input (for height, weight, etc.) -->
+                                            <input type="number" 
+                                                class="form-control @error($field) is-invalid @enderror" 
+                                                name="{{ $attributes['name'] }}" 
+                                                id="{{ $attributes['id'] }}" 
+                                                placeholder="{{ $attributes['placeholder'] }}" 
+                                                value="{{ old($field, $attributes['value'] ?? '') }}" 
+                                                {{ isset($attributes['required']) && $attributes['required'] ? 'required' : '' }} 
+                                                {{ isset($attributes['min']) ? 'min=' . $attributes['min'] : '' }}
+                                                {{ isset($attributes['max']) ? 'max=' . $attributes['max'] : '' }}>
+                                        @elseif(isset($attributes['control']) && $attributes['control'] == 'select-option')
+                                            <!-- Dropdown Select -->
+                                            <select class="form-control @error($field) is-invalid @enderror" 
+                                                    name="{{ $attributes['name'] }}" 
+                                                    id="{{ $attributes['id'] }}"
+                                                    {{ isset($attributes['required']) && $attributes['required'] ? 'required' : '' }}>
+                                                
+                                                <option value="" disabled selected>Pilih {{ $attributes['placeholder'] ?? 'Pilihan' }}</option>
+                                                
+                                                @foreach($attributes['in'] as $key => $value)
+                                                    <option value="{{ $key }}" 
+                                                        {{ old($field, $attributes['value'] ?? null) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @elseif(isset($attributes['control']) && $attributes['control'] == 'select-search-ajax')
+                                            <!-- Dropdown Select with AJAX Search -->
+                                            <select class="form-control select-ajax @error($field) is-invalid @enderror" 
+                                                    name="{{ $attributes['name'] }}" 
+                                                    id="{{ $attributes['id'] }}" 
+                                                    data-url="{{ url($attributes['url'] ?? '') }}" 
+                                                    data-placeholder="{{ $attributes['placeholder'] ?? 'Pilih Pilihan' }}"
+                                                    {{ isset($attributes['required']) && $attributes['required'] ? 'required' : '' }}>
+                                                
+                                                <option value="" disabled selected>{{ $attributes['placeholder'] ?? 'Pilih Pilihan' }}</option>
+                                                @if(!empty($attributes['value']))
+                                                    <!-- Add selected option dynamically -->
+                                                    <option value="{{ $attributes['value'] }}" selected>{{ $attributes['selected_text'] ?? 'Pilihan Terpilih' }}</option>
+                                                @endif
+                                            
+                                            </select>                                        
                                         @else
                                             <!-- Default Input -->
                                             <input type="{{ $attributes['type'] ?? 'text' }}" 
@@ -128,7 +171,6 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
                                 </div>
                             @endforeach
                         
-
                             <div class="form-group row">
                                 <div class="col-sm-10 offset-sm-2">
                                     <button type="submit" class="btn btn-primary">Simpan</button>
@@ -147,11 +189,40 @@ $formTitle = isset($id) ? 'Ubah':'Tambah';
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('public/vendor/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('public/vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script>
-    </script>
+        $(document).ready(function () {
+            $('.select-ajax').each(function () {
+                const select = $(this);
+                const url = select.data('url');
+                const placeholder = select.data('placeholder') || 'Pilih';
 
+                // Initialize select2 with search functionality
+                select.select2({
+                    placeholder: placeholder,
+                    ajax: {
+                        url: url,
+                        dataType: 'json',
+                        delay: 300, 
+                        data: function (params) {
+                            return {
+                                search: params.term, 
+                                limit: 10,          
+                            };
+                        },
+                        processResults: function (data) {
+                            console.log(data);
+                            return {
+                                results: data.map(item => ({
+                                    id: item.id,
+                                    text: item.text
+                                }))
+                            };
+                        }
+                    },
+                    minimumInputLength: 4, // Trigger AJAX after 4 characters
+                });
+            });
+        });
+    </script>
 @endpush
