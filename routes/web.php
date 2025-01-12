@@ -6,6 +6,7 @@ use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\Web\ExaminationController;
 use App\Http\Controllers\Web\PatientController;
 use App\Http\Controllers\Web\DoctorController;
+use App\Http\Controllers\Web\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,10 @@ use App\Http\Controllers\Web\DoctorController;
 */
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    
     Route::resource('patients', PatientController::class);
     Route::resource('examinations', ExaminationController::class);
     Route::resource('prescriptions', ExaminationController::class);
