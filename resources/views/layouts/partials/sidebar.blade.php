@@ -22,6 +22,12 @@
             <span>Pasien</span></a>
     </li>
 
+    <li class="nav-item {{ Request::is('examinations') || Request::is('examinations/*') ? 'active' : '' }}" >
+        <a class="nav-link" href="{{ url('/examinations') }}">
+            <i class="fas fa-notes-medical"></i>
+            <span>Pemeriksaan</span></a>
+    </li>
+
     <hr class="sidebar-divider d-none d-md-block">
 
     <div class="text-center d-none d-md-inline">

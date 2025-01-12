@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Services\PatientService;
+use App\Services\PrescriptionService;
 use Illuminate\Http\Request;
 
 class ExaminationController extends WebManagementController
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->prescriptionService = new PrescriptionService;
+    }
+
     /**
      * Get resource list header.
      */
@@ -46,6 +53,31 @@ class ExaminationController extends WebManagementController
             'id' => $model->id,
             'content' => $content,
             'resource' => $this->resource
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $model = $this->service->show($id);
+
+        $data = [];
+        foreach (static::defineFormInputs(true) as $k => $v) {
+            $field = $v['value_field'] ?? $k;
+            $data[$k] = $model->$field;
+        }
+
+        $data = static::customView($data, true);
+
+        $prescriptions = $this->prescriptionService->getPrescriptionsByExaminationId($id);
+
+        return view('pages.'.$this->resource.'.show', [
+            'id' => $model->id,
+            'data' => $data,
+            'resource' => $this->resource,
+            'prescriptions' => $prescriptions
         ]);
     }
 

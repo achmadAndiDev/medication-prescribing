@@ -61,6 +61,18 @@
         .dataTables_info,.dataTables_paginate,.dataTables_length,.dataTable_filter{
             font-size: 0.80rem !important;
         }
+
+        .modal-xl-custom {
+            max-width: 90%; 
+        }
+
+        .medicineList-tab {
+            font-size: 0.875rem !important;
+        }
+
+        .medicineList-tab th, .medicineList-tab td {
+            font-size: 0.875rem !important;
+        }
     </style>
 
 
