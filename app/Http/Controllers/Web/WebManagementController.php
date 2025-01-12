@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -151,7 +152,7 @@ class WebManagementController extends Controller
 
         $data = static::customView($data, true);
 
-        return view('pages.' . $this->viewFolder . '.show', [
+        return View::first(['pages.'.$this->resource.'.show' ,'pages.' . $this->viewFolder . '.show'], [
             'id' => $model->id,
             'data' => $data,
             'resource' => $this->resource
