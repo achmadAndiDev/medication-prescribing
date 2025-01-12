@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\PaginationScope;
 use App\Models\Traits\ModelValidation;
+use App\Models\Traits\ActivityLog;
 
 class Examination extends Model
 {
-    use HasFactory, SoftDeletes, PaginationScope, ModelValidation;
+    use HasFactory, ActivityLog, SoftDeletes, PaginationScope, ModelValidation;
 
     protected $fillable = [
         'patient_id',

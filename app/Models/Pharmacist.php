@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\ActivityLog;
 
 class Pharmacist extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, ActivityLog, SoftDeletes;
 
     protected $fillable = [
         'person_id',
