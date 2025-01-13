@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Patient;
+use App\Models\PrescriptionDetail;
 use Illuminate\Support\Facades\DB;
 
 class PrescriptionService extends WebManagementService
@@ -49,6 +49,37 @@ class PrescriptionService extends WebManagementService
         }
 
         return $query->paginate(perPage: $limit, page: $page);
+    }
+
+    public function store(array $data)
+    {
+        DB::beginTransaction();
+        try {
+            $prescription = $this->model->create([
+                'examination_id' => $data['examination_id'],
+                'note' => $data['note'],
+                'prescription_date' => now()
+            ]);
+
+            foreach ($data['medicines'] as $medicine) {
+                PrescriptionDetail::create([
+                    'prescription_id' => $prescription->id,
+                    'medicine_id' => $medicine['id'],
+                    'medicine_name' => $medicine['name'],
+                    'quantity' => $medicine['quantity'],
+                    'unit_price' => $medicine['unit_price'],
+                    'price_start_date' => $medicine['start_date'],
+                    'price_end_date' => $medicine['end_date'],
+                ]);
+            }
+
+            DB::commit();
+
+            return $prescription;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e; // Re-throw the exception for the controller to handle
+        }
     }
 
 }

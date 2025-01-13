@@ -16,7 +16,8 @@ class Prescription extends Model
     protected $fillable = [
         'examination_id',
         'notes',
-        'is_paid'
+        'is_paid',
+        'prescription_date'
     ];
 
     protected $casts = [
@@ -40,6 +41,6 @@ class Prescription extends Model
 
     public function examination()
     {
-        return $this->belongsTo(examination::class);
+        return $this->belongsTo(Examination::class);
     }
 }

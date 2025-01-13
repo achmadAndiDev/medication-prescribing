@@ -27,7 +27,7 @@
     <x-card-detail :resource="$resource" :data="$data" />
 
     <div class="card mt-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between">
             <h5 class="card-title mb-0"><i class="fas fa-pills"></i> Daftar Obat Pasien</h5>
             <!-- Button to trigger modal -->
             <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#addMedicineModal">
@@ -60,7 +60,17 @@
                                     </div>
                             
                                     <div id="medicineDetails" class="mt-4 d-none">
-                                        <button id="backButton" class="btn btn-sm btn-secondary mb-3">Kembali</button>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <!-- Nama Obat Terpilih -->
+                                            <input type="hidden" name="medicine_id" id="selectedMedicineId">
+                                            <input type="hidden" name="medicine_name" id="selectedMedicineName">
+                                            <span id="selectedMedicineNameInfo" class="me-3 fw-bold"></span>
+                                    
+                                            <!-- Tombol Kembali dengan Ikon -->
+                                            <button id="backButton" class="btn btn-sm btn-secondary">
+                                                <i class="fas fa-arrow-left"></i> Kembali
+                                            </button>
+                                        </div>
                                         <h5>Harga Obat</h5>
                                         <div class="table-responsive">
                                             <table class="table table-bordered" width="100%" cellspacing="0">
@@ -79,13 +89,21 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <h6>Daftar Obat</h6>
+                                <div class="col-md-6 medicineList-tab">
+                                    <div class="d-flex justify-content-between">
+                                        <h6>Daftar Obat</h6>
+                                        <button class="btn btn-primary" id="saveSelectedMedicines">Simpan</button>
+                                    </div>  
+                                    <br>
+                                    <input type="hidden" id="examinationId" name="examination_id" value="{{ $id }}">
+                                    <textarea id="medicineNote" name="medicine_note" class="form-control" rows="2" placeholder="Tambah catatan resep (Optional)"></textarea>
+                                    <br>
+
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
                                                 <th>Nama Obat</th>
-                                                <th>Harga</th>
+                                                <th>Harga Satuan</th>
                                                 <th>Jumlah</th>
                                                 <th>Aksi</th>
                                             </tr>
@@ -95,13 +113,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-
                             </div>
-                            
-                        </div>
-                        
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
                         </div>
                     </div>
                 </div>
@@ -123,28 +135,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($prescriptions as $index => $prescription)
-                                @foreach ($prescription->details as $detail)
-                                    <tr>
-                                        <td>{{ $loop->parent->iteration }}</td>
-                                        <td>{{ $detail->medicine_name }}</td>
-                                        <td>{{ $detail->dosage }}</td>
-                                        <td>{{ $detail->quantity }}</td>
-                                        <td>{{ $detail->description ?? '-' }}</td>
-                                        <td>
-                                            <a href="{{ route('prescriptions.edit', $prescription->id) }}" class="btn btn-sm btn-warning">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('prescriptions.destroy', $prescription->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                            @php
+                                dd($prescriptions);
+                            @endphp
+                            @foreach ($prescriptions as $prescription)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $prescription->medicine_name }}</td>
+                                    <td>{{ $prescription->dosage }}</td>
+                                    <td>{{ $prescription->quantity }}</td>
+                                    <td>{{ $prescription->description ?? '-' }}</td>
+                                    <td>
+                                        <a href="{{ route('prescriptions.edit', $prescription->id) }}" class="btn btn-xs btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('prescriptions.destroy', $prescription->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Apakah Anda yakin?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -161,6 +174,15 @@
 
 @push('scripts')
     <script>
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { 
+                style: 'currency', 
+                currency: 'IDR' 
+            }).format(amount);
+        }
+
+        let selectedMedicines = [];
+
         $(document).ready(function () {
         // Fetch medicines list
         function fetchMedicines(query = '') {
@@ -200,8 +222,15 @@
                             <tr>
                                 <td>${price.start_date.formatted}</td>
                                 <td>${price.end_date.formatted}</td>
-                                <td>${price['unit_price']}</td>
-                                <td><button class="btn btn-sm btn-primary addToSelected">Add</button></td>
+                                <td>${formatRupiah(price['unit_price'])}</td>
+                                <td>
+                                    <button 
+                                        class="btn btn-xs btn-primary addToSelected" 
+                                        data-start-date="${price.start_date.value}" data-end-date="${price.end_date.value}" data-unit-price="${price['unit_price']}"
+                                    >
+                                        Pilih
+                                    </button>
+                                </td>
                             </tr>
                         `);
                     });
@@ -223,32 +252,63 @@
         // Show medicine prices when clicking on a medicine item
         $('#medicineList').on('click', '.medicine-item', function () {
             const medicineId = $(this).data('id');
+            const medicineName = $(this).text();
+
+            $('#selectedMedicineNameInfo').text(medicineName);
+            $('#selectedMedicineId').val(medicineId);
+            $('#selectedMedicineName').val(medicineName);
+
             fetchMedicinePrices(medicineId);
         });
 
         $('#priceList').on('click', '.addToSelected', function () {
-            const row = $(this).closest('tr');
-            const price = row.find('td').eq(2).text();
-            const medicineName = $('.medicine-item[data-id="' + row.closest('tr').data('id') + '"]').text();
+            const button = $(this);
+            const medicine = {
+                id: $('#selectedMedicineId').val(),
+                name: $('#selectedMedicineName').val(),
+                start_date: button.data('start-date'),
+                end_date: button.data('end-date'),    
+                unit_price: button.data('unit-price'),
+                quantity: 1,
+            };
 
-            // Add selected medicine to table
-            $('#selectedMedicines').append(`
-                <tr>
-                    <td>${medicineName}</td>
-                    <td>${price}</td>
-                    <td><input type="number" class="form-control" value="1" min="1"></td>
-                    <td><button class="btn btn-sm btn-danger removeMedicine">Remove</button></td>
-                </tr>
-            `);
-
-
-            $('#medicineDetails').addClass('d-none');
-            $('#medicineListSection').removeClass('d-none');
+            selectedMedicines.push(medicine);
+            renderSelectedMedicines();
         });
+
+        function renderSelectedMedicines() {
+            const tableBody = $('#selectedMedicines');
+            tableBody.empty();
+
+            selectedMedicines.forEach((medicine, index) => {
+                tableBody.append(`
+                    <tr data-index="${index}">
+                        <td>${medicine.name}</td>
+                        <td>${formatRupiah(medicine.unitPrice)}</td>
+                        <td><input type="number" class="form-control quantity-input" value="${medicine.quantity}" min="1" data-index="${index}"></td>
+                        <td><button class="btn btn-sm btn-danger removeMedicine" data-index="${index}">Hapus</button></td>
+                    </tr>
+                `);
+            });
+
+            $('#hiddenInputsContainer').empty();
+            selectedMedicines.forEach((medicine) => {
+                $('#hiddenInputsContainer').append(`
+                    <input type="hidden" name="medicine_ids[]" value="${medicine.id}">
+                    <input type="hidden" name="medicine_names[]" value="${medicine.name}">
+                    <input type="hidden" name="unit_prices[]" value="${medicine.unitPrice}">
+                    <input type="hidden" name="price_start_dates[]" value="${medicine.startDate}">
+                    <input type="hidden" name="price_end_dates[]" value="${medicine.endDate}">
+                    <input type="hidden" name="quantities[]" value="${medicine.quantity}">
+                `);
+            });
+        }
 
          // Remove medicine from selected list
         $('#selectedMedicines').on('click', '.removeMedicine', function () {
-            $(this).closest('tr').remove();
+            const index = $(this).data('index');
+            selectedMedicines.splice(index, 1);
+            renderSelectedMedicines();
         });
 
         // Back button functionality
@@ -257,9 +317,55 @@
             $('#medicineListSection').removeClass('d-none');
         });
 
+
+        $('#saveSelectedMedicines').on('click', function () {
+            // Ambil nilai dari catatan (note)
+            const examinationId = $("#examinationId").val();
+            const note = $("#medicineNote").val();
+
+            if (selectedMedicines.length === 0) {
+                alert("Pilih setidaknya satu obat sebelum menyimpan.");
+                return;
+            }
+
+            // Log untuk memastikan data yang dikirim benar
+            console.log("Selected Medicines:", selectedMedicines);
+            console.log("Note:", note);
+
+            // Kirim data ke server menggunakan AJAX
+            $.ajax({
+                url: '/prescriptions', // Ganti dengan endpoint yang sesuai di server Anda
+                method: 'POST',
+                contentType: 'application/json', // Pastikan content-type adalah JSON
+                data: JSON.stringify({
+                    examination_id: examinationId, // Data obat yang dipilih
+                    medicines: selectedMedicines, // Data obat yang dipilih
+                    note: note // Catatan tambahan
+                }),
+                success: function (response) {
+                    // Tampilkan notifikasi keberhasilan
+                    alert('Data berhasil disimpan!');
+                    console.log("Response from server:", response);
+
+                    // Reset selectedMedicines dan note
+                    selectedMedicines = [];
+                    $("#medicineNote").val('');
+                    renderSelectedMedicines(); // Update tampilan, jika ada
+                },
+                error: function (error) {
+                    // Tampilkan notifikasi error
+                    alert('Terjadi kesalahan saat menyimpan data.');
+                    console.error("Error:", error);
+                }
+            });
+        });
+
+
         // Initial fetch
         fetchMedicines();
     });
+
+    
 
     </script>
 @endpush
